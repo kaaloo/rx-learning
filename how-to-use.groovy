@@ -75,9 +75,9 @@ def hello6(String... names) {
 }
 
 def hello7(String... names) {
-	Observable.defer {
-		Observable.from(names)
-	}.subscribe {
+  Observable.defer {
+    Observable.from(names)
+  }.subscribe {
     println "Hello " + it + "!"
   }
 }
