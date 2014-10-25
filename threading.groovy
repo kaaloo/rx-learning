@@ -1,10 +1,27 @@
 @Grab('com.netflix.rxjava:rxjava-groovy:0.20.6')
 
 import rx.*
+import rx.functions.*
 import rx.subscriptions.*
 import rx.schedulers.*
 
 // Based on http://www.grahamlea.com/2014/07/rxjava-threading-examples/
+
+// Pimp Observable with debug
+// See http://groovy.codehaus.org/Pimp+my+Library+Pattern
+
+class EnhancedObservable {
+  static indent = 0
+  static Observable debug(Observable self, String message) {
+    println "self : ${self}"
+    println "message: ${message}"
+    self.doOnNext(new Action1() {
+      void call(value) {
+        // println "value: ${value}"
+      }
+    })
+  }
+}
 
 // Single thread
 
@@ -27,29 +44,12 @@ shiftedDown.subscribe {
 
 // IOScheduler
 
-Observable.metaClass.debug = { message ->
-	delegate.lift {
-		
-	}
+use (EnhancedObservable) {
+  maxNumber = 5
+  generator = Observable.from(1..maxNumber).debug("Generated")
+  // shiftedUp = generator.subscribeOn(Schedulers.io()).map { it + 10 }.debug("Shifted Up")
+  // shiftedDown = shiftedUp.map { it - 10 }.debug("Shifted Down")
+  // shiftedDown.subscribe { it }.debug("Received")
 }
-
-maxNumber = 5
-generator = Observable.from(1..maxNumber)
-levelUp = 0
-shiftedUp = generator.subscribeOn(Schedulers.io()).map {
-  println "[${Thread.currentThread().name}] Shifted Up:    ${"".padRight(4*levelUp++, '.')} ${it + 10}"
-  it + 10
-}
-levelDown = 0
-shiftedDown = shiftedUp.map {
-  println "[${Thread.currentThread().name}] Shifted Down:  ${"".padRight(4*levelDown++, '.')} ${it - 10}"
-  it - 10
-}
-levelSubscribe = 0
-shiftedDown.subscribe {
-  println "[${Thread.currentThread().name}] Received:      ${"".padRight(4*levelSubscribe++, '.')} ${it}"
-  it
-}
-null
 
 
